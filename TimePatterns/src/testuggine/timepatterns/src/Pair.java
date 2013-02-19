@@ -22,7 +22,8 @@ public class Pair<FIRST, SECOND> implements Comparable<Pair<FIRST, SECOND>> {
     }
 
     // todo move this to a helper class.
-    private static int compare(Object o1, Object o2) {
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+	private static int compare(Object o1, Object o2) {
         return o1 == null ? o2 == null ? 0 : -1 : o2 == null ? +1
                 : ((Comparable) o1).compareTo(o2);
     }
@@ -37,7 +38,8 @@ public class Pair<FIRST, SECOND> implements Comparable<Pair<FIRST, SECOND>> {
         return o == null ? 0 : o.hashCode();
     }
 
-    @Override
+    @SuppressWarnings("rawtypes")
+	@Override
     public boolean equals(Object obj) {
         if (!(obj instanceof Pair))
             return false;

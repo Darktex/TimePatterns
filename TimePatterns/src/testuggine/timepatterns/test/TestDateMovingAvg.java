@@ -143,7 +143,7 @@ public class TestDateMovingAvg extends TestCase {
 			filter = d.advance();
 
 			StdOut.println("Test trace for i = " + i + ", l = " + l +
-					", d = " + d + " and with mean(l) = " + wholeList + ", mean(d) = " + 
+					"\nd = " + d + "\nand with mean(l) = " + wholeList + ", mean(d) = " + 
 					filter +".\n");
 			assertEquals(truncate(wholeList), truncate(filter));
 		}
