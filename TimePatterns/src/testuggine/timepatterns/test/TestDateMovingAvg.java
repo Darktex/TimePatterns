@@ -35,7 +35,7 @@ public class TestDateMovingAvg extends TestCase {
 		
 		Date d = new Date(4, 10, 2012);
 		for (int j = 0; j < 15; j++, d = d.next()) { // 15 days max
-			int q = StdRandom.uniform(10);
+			int q = StdRandom.uniform(1000);
 			for (int i = 0; i < q; i++) {
 				Integer rand = StdRandom.uniform(10000);
 				map.insert(d, rand);
@@ -134,21 +134,24 @@ public class TestDateMovingAvg extends TestCase {
 		"\nd = " + d + " and with mean(l) = " + wholeList + ", mean(d) = " + 
 		filter +".\n");
 		
-		assertEquals(wholeList, filter);
-		for (int i = 0; i < 3; i++) {
+		assertEquals(truncate(wholeList), truncate(filter));
+		for (int i = 0; i < 7; i++) {
 			listStart = listStart.next();
 			listEnd = listEnd.next();
 			l = map.flattenInterval(listStart, listEnd); // 1 after the end
 			wholeList = TimeStampedRatingMap.listAverage(l);
 			filter = d.advance();
-			StdOut.println("Test failed for i = " + i + ", l = " + l +
-					", d = " + d + " and with mean(l) = " + wholeList + ", mean(d) = " + 
-					filter +".\n");
+
 			assertEquals("Test failed for i = " + i + ", l = " + l +
 					", d = " + d + " and with mean(l) = " + wholeList + ", mean(d) = " + 
-					filter +".\n", wholeList, filter);
+					filter +".\n", truncate(wholeList), truncate(filter));
 		}
 			
+	}
+	
+	
+	public static float truncate(double num) {
+		return (float) (Math.round(num*10.0)/10.0);
 	}
 	
 }

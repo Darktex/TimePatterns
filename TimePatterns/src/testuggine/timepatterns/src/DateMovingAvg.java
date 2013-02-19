@@ -2,6 +2,7 @@ package testuggine.timepatterns.src;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.TreeMap;
 
 
 import edu.princeton.cs.algs4.Date;
@@ -13,6 +14,8 @@ public class DateMovingAvg {
 	Date currentStartingDay;
 	Date currentEndingDay;
 	
+	TreeMap<Date, Pair<Double, Integer>> results;
+	
 	public DateMovingAvg(TimeStampedRatingMap domain, Date startingDate) throws DomainTooShortException {
 		currentStartingDay = startingDate;
 		currentEndingDay = weekLater(startingDate);
@@ -21,6 +24,9 @@ public class DateMovingAvg {
 		TimeStampedRatingMap weeklyRatings = domain.subMap(currentStartingDay, currentEndingDay);
 		weeklyRatingsCount = weeklyRatings.ratingsCount();
 		weeklyMean = weeklyRatings.allElementsAvgDouble();
+		results = new TreeMap<Date, Pair<Double, Integer>>();
+		Pair<Double, Integer> pair = Pair.of(weeklyMean, weeklyRatingsCount);
+		results.put(currentStartingDay, pair);
 	}
 	
 	public DateMovingAvg(TimeStampedRatingMap domain) throws DomainTooShortException {
@@ -32,6 +38,9 @@ public class DateMovingAvg {
 		TimeStampedRatingMap weeklyRatings = domain.subMap(currentStartingDay, currentEndingDay);
 		weeklyRatingsCount = weeklyRatings.ratingsCount();
 		weeklyMean = weeklyRatings.allElementsAvgDouble();
+		results = new TreeMap<Date, Pair<Double, Integer>>();
+		Pair<Double, Integer> pair = Pair.of(weeklyMean, weeklyRatingsCount);
+		results.put(currentStartingDay, pair);
 	}
 	
 	public float advance() {
@@ -75,7 +84,15 @@ public class DateMovingAvg {
 				+ oldWeekCount * weeklyMean - old_count * old_mean) / weeklyRatingsCount;
 		
 		currentEndingDay = currentEndingDay.next();
+		Pair<Double, Integer> pair = Pair.of(weeklyMean, weeklyRatingsCount);
+		results.put(currentStartingDay, pair);
 		return truncate (weeklyMean);
+	}
+	
+	public TreeMap<Date, Pair<Double, Integer>> computeBatch() {
+		while (currentEndingDay.compareTo(domain.map.lastKey()) < 0) // advance over all the domain
+			advance();
+		return results; // return the result
 	}
 	
 	public double getCurrentMean() {
@@ -86,7 +103,7 @@ public class DateMovingAvg {
 		return truncate(weeklyMean);
 	}
 	
-	private static float truncate(double num) {
+	public static float truncate(double num) {
 		return (float) (Math.round(num*10000.0)/10000.0);
 	}
 	
