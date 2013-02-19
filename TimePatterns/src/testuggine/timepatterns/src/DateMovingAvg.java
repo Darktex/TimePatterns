@@ -1,89 +1,106 @@
 package testuggine.timepatterns.src;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map.Entry;
+import java.util.Map;
+
 
 import edu.princeton.cs.algs4.Date;
-import edu.princeton.cs.introcs.StdStats;
 
 public class DateMovingAvg {
-	int N; // number of elements it contains
-	int windowSize;
+	TimeStampedRatingMap domain;
+	Double weeklyMean;
+	Integer weeklyRatingsCount;
 	Date currentStartingDay;
 	Date currentEndingDay;
-	MovingAverage movingAvg;
-	TimeStampedRatingMap domain;
 	
-	
-	public DateMovingAvg(int windowSize, TimeStampedRatingMap domain, Date startingDate) {
-		this.N = 0;
-		this.windowSize = windowSize;
-		this.movingAvg = new MovingAverage(windowSize);
+	public DateMovingAvg(TimeStampedRatingMap domain, Date startingDate) throws DomainTooShortException {
 		currentStartingDay = startingDate;
-		currentEndingDay = weekLater(currentStartingDay);
+		currentEndingDay = weekLater(startingDate);
 		this.domain = domain;
+		if (!domain.isLongerThanAWeek()) throw new DomainTooShortException("The domain contains less than a week of activity");
+		TimeStampedRatingMap weeklyRatings = domain.subMap(currentStartingDay, currentEndingDay);
+		weeklyRatingsCount = weeklyRatings.ratingsCount();
+		weeklyMean = weeklyRatings.allElementsAvgDouble();
 	}
 	
-	public DateMovingAvg(int windowSize, TimeStampedRatingMap domain) {
+	public DateMovingAvg(TimeStampedRatingMap domain) throws DomainTooShortException {
 		this.domain = domain;
-		Iterator<Entry<Date, List<Integer>>> it = domain.iterator();
+		Iterator<Map.Entry<Date, ArrayList<Integer>>> it = domain.iterator();
 		currentStartingDay = it.next().getKey();
 		currentEndingDay = weekLater(currentStartingDay);
-		this.N = 0;
-		this.windowSize = windowSize;
-		this.movingAvg = new MovingAverage(windowSize);
-	}
-	
-	public boolean isBootStrapped() {
-		return movingAvg.isBootstrapped();
+		if (!domain.isLongerThanAWeek()) throw new DomainTooShortException("The domain contains less than a week of activity");
+		TimeStampedRatingMap weeklyRatings = domain.subMap(currentStartingDay, currentEndingDay);
+		weeklyRatingsCount = weeklyRatings.ratingsCount();
+		weeklyMean = weeklyRatings.allElementsAvgDouble();
 	}
 	
 	public float advance() {
-		Date previousStartingDay = currentStartingDay;
+		Date prev = currentStartingDay;
 		currentStartingDay = currentStartingDay.next();
-		currentEndingDay = currentEndingDay.next();
-		float currentStartingMean = domain.dailyAvg(currentStartingDay);
-		int currentStartingReviews = domain.dailyReviews(currentStartingDay);
-		return movingAvg.advance(currentStartingMean);
 		
+		ArrayList<Integer> old;
+		Integer old_count;
+		Double old_mean;
+		
+		if (domain.contains(prev)) {
+			old = domain.getRatings(prev);
+			old_count = old.size();
+			old_mean = TimeStampedRatingMap.listAverageDouble(old);
+		}
+		else {
+			old = null;
+			old_count = 0;
+			old_mean = 0.0;
+		}
+	
+		ArrayList<Integer> newDay;
+		Integer new_count;
+		double new_mean;
+		
+		if (domain.contains(currentEndingDay)) { 
+			newDay = domain.getRatings(currentEndingDay);
+			new_count = newDay.size();
+			new_mean = TimeStampedRatingMap.listAverage(newDay);
+		}
+		else {
+			newDay = null;
+			new_count = 0;
+			new_mean = 0.0;
+		}
+		
+		
+		Integer oldWeekCount = weeklyRatingsCount;
+		weeklyRatingsCount = oldWeekCount - old_count + new_count;
+		weeklyMean = (new_count * new_mean 
+				+ oldWeekCount * weeklyMean - old_count * old_mean) / weeklyRatingsCount;
+		
+		currentEndingDay = currentEndingDay.next();
+		return truncate (weeklyMean);
 	}
 	
-	private static Date weekLater(Date start) {
+	public double getCurrentMean() {
+		return weeklyMean;
+	}
+	
+	public float getCurrentMeanFloat() {
+		return truncate(weeklyMean);
+	}
+	
+	private static float truncate(double num) {
+		return (float) (Math.round(num*10000.0)/10000.0);
+	}
+	
+	public static Date weekLater(Date start) {
 		Date retval = new Date(start.toString());
 		for (int i = 0; i < 7; i++)
 			retval = retval.next();
 		return retval;
 	}
-	
 
-	private class MovingAverage {
-		float[] a;
-		int N; // size of moving avg filter
-		int i;
-		float sum;
-		
-		public MovingAverage(int N) {
-			this.N = N;
-			this.i = 0;
-			this.a = new float[N];
-			this.sum = 0;
-		}
-		/** Advances && returns the new running avg */
-		public float advance(float newElement) {
-	            sum -= a[i % N];
-	            a[i % N] = newElement;
-	            sum += a[i % N];
-	            i++;
-	            return sum / N;
-		}
-		public int size() {
-			return N;
-		}
-		/** If less than N values were inserted, the filter is not ready */
-		public boolean isBootstrapped() {
-			return i >= N;
-		}
+	@Override
+	public String toString() {
+		return "DateMovingAvg [domain=" + domain + "weeklyRatings="
+				+ domain.subMap(currentStartingDay, currentEndingDay) + ", weeklyMean=" + weeklyMean + "]";
 	}
+		
 }
