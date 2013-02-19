@@ -5,20 +5,21 @@ import java.util.Map;
 import java.util.TreeMap;
 
 
-import edu.princeton.cs.algs4.Date;
-
 public class DateMovingAvg {
 	TimeStampedRatingMap domain;
 	Double weeklyMean;
 	Integer weeklyRatingsCount;
 	Date currentStartingDay;
 	Date currentEndingDay;
+	Date center; // the date around with this filter is centered
 	
 	TreeMap<Date, Pair<Double, Integer>> results;
 	
 	public DateMovingAvg(TimeStampedRatingMap domain, Date startingDate) throws DomainTooShortException {
-		currentStartingDay = startingDate;
-		currentEndingDay = weekLater(startingDate);
+		center = startingDate;
+		currentStartingDay = center.goBack(3);
+		currentEndingDay = center.advance(4); // 1 after the end
+		
 		this.domain = domain;
 		if (!domain.isLongerThanAWeek()) throw new DomainTooShortException("The domain contains less than a week of activity");
 		TimeStampedRatingMap weeklyRatings = domain.subMap(currentStartingDay, currentEndingDay);
@@ -33,7 +34,8 @@ public class DateMovingAvg {
 		this.domain = domain;
 		Iterator<Map.Entry<Date, ArrayList<Integer>>> it = domain.iterator();
 		currentStartingDay = it.next().getKey();
-		currentEndingDay = weekLater(currentStartingDay);
+		center = currentStartingDay.advance(3);
+		currentEndingDay = currentStartingDay.advance(7);
 		if (!domain.isLongerThanAWeek()) throw new DomainTooShortException("The domain contains less than a week of activity");
 		TimeStampedRatingMap weeklyRatings = domain.subMap(currentStartingDay, currentEndingDay);
 		weeklyRatingsCount = weeklyRatings.ratingsCount();
@@ -107,17 +109,10 @@ public class DateMovingAvg {
 		return (float) (Math.round(num*10000.0)/10000.0);
 	}
 	
-	public static Date weekLater(Date start) {
-		Date retval = new Date(start.toString());
-		for (int i = 0; i < 7; i++)
-			retval = retval.next();
-		return retval;
-	}
-
 	@Override
 	public String toString() {
-		return "DateMovingAvg [domain=" + domain + "weeklyRatings="
-				+ domain.subMap(currentStartingDay, currentEndingDay) + ", weeklyMean=" + weeklyMean + "]";
+		return "DateMovingAvg [center= " + center + "\nweeklyRatings="
+				+ domain.subMap(currentStartingDay, currentEndingDay) + "\nweeklyMean=" + weeklyMean + "\ndomain=" + domain + "]";
 	}
 		
 }

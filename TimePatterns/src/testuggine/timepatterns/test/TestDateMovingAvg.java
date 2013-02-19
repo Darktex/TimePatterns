@@ -11,9 +11,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.princeton.cs.algs4.Date;
 import edu.princeton.cs.introcs.StdOut;
 import edu.princeton.cs.introcs.StdRandom;
+import testuggine.timepatterns.src.Date;
 import testuggine.timepatterns.src.DateMovingAvg;
 import testuggine.timepatterns.src.TimeStampedRatingMap;
 
@@ -119,7 +119,7 @@ public class TestDateMovingAvg extends TestCase {
 
 	@Test
 	public void testMeanCoherence() throws Exception {
-		Date filterStart = new Date(4, 10, 2012);
+		Date filterStart = new Date(4, 13, 2012);
 		Date filterEnd = new Date(4, 17, 2012);
 		
 		Date listStart = new Date(4, 10, 2012);
@@ -142,9 +142,10 @@ public class TestDateMovingAvg extends TestCase {
 			wholeList = TimeStampedRatingMap.listAverage(l);
 			filter = d.advance();
 
-			assertEquals("Test failed for i = " + i + ", l = " + l +
+			StdOut.println("Test trace for i = " + i + ", l = " + l +
 					", d = " + d + " and with mean(l) = " + wholeList + ", mean(d) = " + 
-					filter +".\n", truncate(wholeList), truncate(filter));
+					filter +".\n");
+			assertEquals(truncate(wholeList), truncate(filter));
 		}
 			
 	}

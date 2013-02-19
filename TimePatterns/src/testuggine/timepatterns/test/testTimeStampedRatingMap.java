@@ -9,10 +9,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.princeton.cs.algs4.Date;
 import edu.princeton.cs.introcs.StdOut;
 import edu.princeton.cs.introcs.StdRandom;
 import testuggine.timepatterns.src.TimeStampedRatingMap;
+import testuggine.timepatterns.src.Date;
 
 public class testTimeStampedRatingMap extends TestCase {
 

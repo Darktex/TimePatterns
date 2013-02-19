@@ -7,7 +7,8 @@ import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import edu.princeton.cs.algs4.Date;
+import testuggine.timepatterns.src.Date;
+
 
 public class TimeStampedRatingMap implements Iterable<Map.Entry<Date, ArrayList<Integer>>> {
 
