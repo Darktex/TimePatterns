@@ -1,5 +1,9 @@
 package testuggine.timepatterns.src;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -7,7 +11,7 @@ import java.util.ArrayList;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
-import edu.princeton.cs.introcs.Out;
+import edu.princeton.cs.introcs.StdOut;
 
 /**
  * This class takes a restaurant into account, and prints the time patterns of
@@ -15,33 +19,67 @@ import edu.princeton.cs.introcs.Out;
  */
 public class TimePatterns {
 	MySQLConnection db;
+	String path;
 
 	// For each (starting) date,
 	// you have a mean val (double) and the number of reviews (Int)
 
-	public TimePatterns() throws Exception {
+	public TimePatterns(boolean wantYelp, boolean wantTA, boolean wantOT, String path) throws Exception  {
 		db = new MySQLConnection();
-		ArrayList<String> Yelp = getAllSuitableRestaurants("Yelp");
-		ArrayList<String> TripAdvisor = getAllSuitableRestaurants("TripAdvisor");
-		ArrayList<String> OpenTable = getAllSuitableRestaurants("OpenTable");
+		this.path = path;
 		
-		for (String restaurant_id : Yelp) {
-			TimeStampedRatingMap T = getTimeStampedTable("Yelp", restaurant_id);
-			DateMovingAvg filter = new DateMovingAvg(T);
-			writeData("Yelp", restaurant_id, filter.computeBatch());
+		PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(path + "Yelp.txt", false)));
+		out.println("website restaurantID startDate center endDate mean count deltaM deltaC");
+		out.close();
+		
+		out = new PrintWriter(new BufferedWriter(new FileWriter(path + "TripAdvisor.txt", false)));
+		out.println("website restaurantID startDate center endDate mean count deltaM deltaC");
+		out.close();
+		
+		out = new PrintWriter(new BufferedWriter(new FileWriter(path + "OpenTable.txt", false)));
+		out.println("website restaurantID startDate center endDate mean count deltaM deltaC");
+		out.close();
+		
+		ArrayList<String> container = new ArrayList<String>();
+		
+		if (wantYelp) {
+			 container = getAllSuitableRestaurants("Yelp");
+			 work("Yelp", container);
+		}
+		else container = null;
+		
+		if (wantTA) {
+			container = getAllSuitableRestaurants("TripAdvisor");
+			work("TripAdvisor", container);
+		}
+		else container = null;
+		
+		if (wantOT) {
+			container = getAllSuitableRestaurants("OpenTable");
+			work("OpenTable", container);
+		}
+		else container = null;
+		
+		
+	}
+
+	private void work(String website, ArrayList<String> container) throws Exception {
+		for (String restaurant_id : container) {
+			TimeStampedRatingMap T = getTimeStampedTable(website, restaurant_id);
+			DateMovingAvg filter;
+			try {
+				filter = new DateMovingAvg(T);
+				writeData(website, restaurant_id, filter.computeBatch());
+			} catch (DomainTooShortException e) {
+				StdOut.println("Restaurant " + restaurant_id + " from " + website);
+				continue;
+			}
+			finally {
+				filter = null;
+				T = null;
+			}
 		}
 		
-		for (String restaurant_id : TripAdvisor) {
-			TimeStampedRatingMap T = getTimeStampedTable("TripAdvisor", restaurant_id);
-			DateMovingAvg filter = new DateMovingAvg(T);
-			writeData("TripAdvisor", restaurant_id, filter.computeBatch());
-		}
-		
-		for (String restaurant_id : OpenTable) {
-			TimeStampedRatingMap T = getTimeStampedTable("OpenTable", restaurant_id);
-			DateMovingAvg filter = new DateMovingAvg(T);
-			writeData("OpenTable", restaurant_id, filter.computeBatch());
-		}
 	}
 
 	private TimeStampedRatingMap constructMap(ResultSet res)
@@ -96,8 +134,8 @@ public class TimePatterns {
 
 	private TimeStampedRatingMap getOTTable(String restaurant_id)
 			throws SQLException {
-		String query = "select restaurant_id, date, overallRating as rating"
-				+ "from TripAdvisorReview" + "where restaurant_id = ?";
+		String query = "select restaurant_id, date, overallRating as rating "
+				+ "from OpenTableReview where restaurant_id = ?";
 		PreparedStatement statement = db.con.prepareStatement(query);
 		statement.setString(1, restaurant_id);
 		ResultSet res = statement.executeQuery();
@@ -107,7 +145,7 @@ public class TimePatterns {
 	private TimeStampedRatingMap getYTable(String restaurant_id)
 			throws SQLException {
 		String query = "select restaurant_id, date, rating "
-				+ "from TripAdvisorReview" + "where restaurant_id = ?";
+				+ "from YelpReview where restaurant_id = ?";
 		PreparedStatement statement = db.con.prepareStatement(query);
 		statement.setString(1, restaurant_id);
 		ResultSet res = statement.executeQuery();
@@ -116,8 +154,8 @@ public class TimePatterns {
 
 	private TimeStampedRatingMap getTATable(String restaurant_id)
 			throws SQLException {
-		String query = "select restaurant_id, date, globalRating as rating"
-				+ "from TripAdvisorReview" + "where restaurant_id = ?";
+		String query = "select restaurant_id, date, globalRating as rating "
+				+ "from TripAdvisorReview where restaurant_id = ?";
 		PreparedStatement statement = db.con.prepareStatement(query);
 		statement.setString(1, restaurant_id);
 		ResultSet res = statement.executeQuery();
@@ -131,21 +169,33 @@ public class TimePatterns {
 	 * ex: Yelp Cesca1291783306
 	 * 04/19/12 11/19/12 3.7534 14
 	 * @param result 
+	 * @throws IOException 
 	 * 
 	 * */
-	public void writeData(String website, String restaurant_id, TreeMap<Date, Pair<Double, Integer>> result) {
-		Out out = new Out(
-				"/Users/davide/Documents/UCSB/Statistics Report/weeklyAvg.txt");
-		out.println("website restaurantID startDate center endDate mean count");
-
+	public void writeData(String website, String restaurant_id, TreeMap<Date, Pair<Double, Integer>> result) throws IOException {
+		
+		PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(path + "/" + website + ".csv", true)));
+		float prev_m = 0;
+		int prev_c = 0;
+		
 		for (Entry<Date, Pair<Double, Integer>> entry : result.entrySet()) {
 			Date start = entry.getKey();
 			Date end = start.advance(7);
 			float mean = DateMovingAvg.truncate(entry.getValue().first);
 			int count = entry.getValue().second;
-			out.println(website + " " + restaurant_id + " " + start + " " + start.advance(3) + " " 
-			+ end + " " + mean + " " + count);
+			
+			float delta_m = mean - prev_m;
+			int delta_c = count - prev_c;
+			
+			prev_m = mean;
+			prev_c = count;
+			
+			if (count > 0 )
+				out.println(website + " " + restaurant_id + " " + start + " " + start.advance(3) + " " 
+			+ end + " " + mean + " " + count + " " + delta_m + " " + delta_c);
 		}
+		out.close();
 	}
+	
 
 }

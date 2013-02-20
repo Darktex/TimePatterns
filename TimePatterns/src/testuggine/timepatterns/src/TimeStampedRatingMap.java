@@ -1,11 +1,14 @@
 package testuggine.timepatterns.src;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.SortedMap;
+import java.util.SortedSet;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import testuggine.timepatterns.src.Date;
 
@@ -149,8 +152,22 @@ public class TimeStampedRatingMap implements Iterable<Map.Entry<Date, ArrayList<
 	public String toString() {
 		return "TimeStampedRatingMap [map=" + map + "]";
 	}
+	
+	static <K,V extends Comparable<? super V>>
+	SortedSet<Map.Entry<K,V>> entriesSortedByValues(Map<K,V> map) {
+	    SortedSet<Map.Entry<K,V>> sortedEntries = new TreeSet<Map.Entry<K,V>>(
+	        new Comparator<Map.Entry<K,V>>() {
+	            @Override public int compare(Map.Entry<K,V> e1, Map.Entry<K,V> e2) {
+	                return e1.getValue().compareTo(e2.getValue());
+	            }
+	        }
+	    );
+	    sortedEntries.addAll(map.entrySet());
+	    return sortedEntries;
+	}
 
 	public boolean isLongerThanAWeek() {
+		if (map.isEmpty()) return false;
 		Date last = map.lastKey();
 		Date first = map.firstKey();
 		for (int i = 0; i < 7; i++)

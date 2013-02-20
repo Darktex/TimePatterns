@@ -8,9 +8,21 @@ import java.util.List;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 
 
 public class Main {
+	
+	   @Option(name="-y",usage="Do Yelp")
+	    private boolean wantYelp;
+	   @Option(name="-ta",usage="Do TA")
+	    private boolean wantTA;
+	   @Option(name="-ot",usage="Do OT")
+	    private boolean wantOT;
+	   @Option(name="-path",usage="Absolute path of the folder in which you want to save stuff. " +
+	   		"This sw will create a text file for each website so pick a folder w/ right permissions")
+		private String path = "~";
+
 	
 	// receives other command line parameters than options
 	@Argument
@@ -42,6 +54,7 @@ public class Main {
 			if( arguments.isEmpty() )
 				throw new CmdLineException("No argument is given");
 
+
 		} catch( CmdLineException e ) {
 			// if there's a problem in the command line,
 			// you'll get this exception. this will report
@@ -59,7 +72,7 @@ public class Main {
 		}
 		
 		@SuppressWarnings("unused")
-		TimePatterns t = new TimePatterns();
+		TimePatterns t = new TimePatterns(wantYelp, wantTA, wantOT, path);
 
 	}
 }

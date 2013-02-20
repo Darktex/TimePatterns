@@ -33,10 +33,10 @@ public class DateMovingAvg {
 	public DateMovingAvg(TimeStampedRatingMap domain) throws DomainTooShortException {
 		this.domain = domain;
 		Iterator<Map.Entry<Date, ArrayList<Integer>>> it = domain.iterator();
+		if (!domain.isLongerThanAWeek()) throw new DomainTooShortException("The domain contains less than a week of activity");
 		currentStartingDay = it.next().getKey();
 		center = currentStartingDay.advance(3);
 		currentEndingDay = currentStartingDay.advance(7);
-		if (!domain.isLongerThanAWeek()) throw new DomainTooShortException("The domain contains less than a week of activity");
 		TimeStampedRatingMap weeklyRatings = domain.subMap(currentStartingDay, currentEndingDay);
 		weeklyRatingsCount = weeklyRatings.ratingsCount();
 		weeklyMean = weeklyRatings.allElementsAvgDouble();
@@ -82,7 +82,8 @@ public class DateMovingAvg {
 		
 		Integer oldWeekCount = weeklyRatingsCount;
 		weeklyRatingsCount = oldWeekCount - old_count + new_count;
-		weeklyMean = (new_count * new_mean 
+		if (weeklyRatingsCount == 0) weeklyMean = 0.0;
+		else weeklyMean = (new_count * new_mean 
 				+ oldWeekCount * weeklyMean - old_count * old_mean) / weeklyRatingsCount;
 		
 		currentEndingDay = currentEndingDay.next();
