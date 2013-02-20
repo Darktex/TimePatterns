@@ -28,16 +28,16 @@ public class TimePatterns {
 		db = new MySQLConnection();
 		this.path = path;
 		
-		PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(path + "Yelp.txt", false)));
-		out.println("website restaurantID startDate center endDate mean count deltaM deltaC");
+		PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(path + "/Yelp.csv", false)));
+		out.println("website\trestaurantID\tstartDate\tcenter\tendDate\tmean\tcount\tdeltaM\tdeltaC");
 		out.close();
 		
-		out = new PrintWriter(new BufferedWriter(new FileWriter(path + "TripAdvisor.txt", false)));
-		out.println("website restaurantID startDate center endDate mean count deltaM deltaC");
+		out = new PrintWriter(new BufferedWriter(new FileWriter(path + "/TripAdvisor.csv", false)));
+		out.println("website\trestaurantID\tstartDate\tcenter\tendDate\tmean\tcount\tdeltaM\tdeltaC");
 		out.close();
 		
-		out = new PrintWriter(new BufferedWriter(new FileWriter(path + "OpenTable.txt", false)));
-		out.println("website restaurantID startDate center endDate mean count deltaM deltaC");
+		out = new PrintWriter(new BufferedWriter(new FileWriter(path + "/OpenTable.csv", false)));
+		out.println("website\trestaurantID\tstartDate\tcenter\tendDate\tmean\tcount\tdeltaM\tdeltaC");
 		out.close();
 		
 		ArrayList<String> container = new ArrayList<String>();
@@ -191,8 +191,8 @@ public class TimePatterns {
 			prev_c = count;
 			
 			if (count > 0 )
-				out.println(website + " " + restaurant_id + " " + start + " " + start.advance(3) + " " 
-			+ end + " " + mean + " " + count + " " + delta_m + " " + delta_c);
+				out.println(website + "\t" + restaurant_id + "\t" + start + "\t" + start.advance(3) + "\t" 
+			+ end + "\t" + mean + "\t" + count + "\t" + delta_m + "\t" + delta_c);
 		}
 		out.close();
 	}
